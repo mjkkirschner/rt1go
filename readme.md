@@ -1,0 +1,1 @@
+A raytracer implemeted in go - for learning.
