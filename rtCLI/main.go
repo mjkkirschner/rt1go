@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-
-	"./core"
+	"rt1go/core"
 )
 
 func main() {
 	fmt.Println("let's raytrace something")
-	core.Test()
+	x := core.NewVector3(1, 2, 3)
+	fmt.Println((x))
 }
