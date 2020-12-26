@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/png"
 	"math"
+	"math/rand"
 	"os"
 	"rt1go/core"
 )
@@ -30,6 +31,11 @@ func main() {
 	fmt.Println("creating a scene with some spheres")
 
 	scene := []core.Hittable{&core.Sphere{core.Vec3{0, 0, -1}, 0.5}, &core.Sphere{core.Vec3{0, -100.5, -1}, 100}}
+
+	for i := 0; i < 1000; i++ {
+		newSphere := core.Sphere{core.Vec3{rand.Float64()*100.0 - 50, rand.Float64()*100.0 - 50, rand.Float64()*100.0 - 50}, rand.Float64() * 5.0}
+		scene = append(scene, &newSphere)
+	}
 
 	fmt.Println("creating camera and image")
 	const imageWidth int = 640
