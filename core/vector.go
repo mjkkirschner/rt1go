@@ -6,6 +6,16 @@ import (
 	"math"
 )
 
+func Clamp(x float64, min float64, max float64) float64 {
+	if x < min {
+		return min
+	}
+	if x > max {
+		return max
+	}
+	return x
+}
+
 //TODO - don't do this
 type Col3 = Vec3
 type Pt3 = Vec3

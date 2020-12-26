@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"image/png"
 	"math"
 	"math/rand"
@@ -25,6 +26,10 @@ func testRayColor(r core.Ray, scene *[]core.Hittable) core.Col3 {
 	return core.Vec3{255, 255, 255}.Scale((1.0 - t)).Add(core.NewVector3(.5*255, .7*255, 1.0*255).Scale((t)))
 }
 
+func ConvertColor(color core.Col3, samples int) color.RGBA {
+	return color.Scale(1.0 / float64(samples)).ToRGBA()
+}
+
 func main() {
 	fmt.Println("let's raytrace something")
 
@@ -40,21 +45,24 @@ func main() {
 	fmt.Println("creating camera and image")
 	const imageWidth int = 640
 	const imageHeight int = 480
+	const samplesPerPixel = 2
 	img := image.NewRGBA(image.Rect(0, 0, imageWidth, imageHeight))
 	cam := core.NewCamera(2, 2.66666666667, 1, core.NewVector3(0, 0, 0))
-	lowerLeftCorner := cam.Origin.Subtract((cam.Horizontal.Scale(.5))).Subtract(cam.Vertical.Scale(.5)).Subtract(core.NewVector3(0, 0, float64(cam.FocalLength)))
-	fmt.Printf("lower left corner is:", lowerLeftCorner)
 
 	for i := 0; i < imageHeight; i++ {
 		for j := 0; j < imageWidth; j++ {
-			u := float64(i) / float64(imageHeight-1)
-			v := float64(j) / float64(imageWidth-1)
-			r := core.NewRay(core.NewVector3(0, 0, 0), lowerLeftCorner.Add(cam.Horizontal.Scale(v)).Add(cam.Vertical.Scale((u))).Subtract(cam.Origin))
+			color := core.Col3{0, 0, 0}
+			for s := 0; s < samplesPerPixel; s++ {
 
-			col := testRayColor(r, &scene)
+				u := (float64(i) + rand.Float64()) / float64(imageHeight-1)
+				v := (float64(j) + rand.Float64()) / float64(imageWidth-1)
+				r := cam.GetRay(v, u)
+
+				color = color.Add(testRayColor(r, &scene))
+			}
 
 			//I think this is a ppm vs goimage discrepancy (is 0,0 top corner or bottom issue)
-			img.SetRGBA(j, imageHeight-i, col.ToRGBA())
+			img.SetRGBA(j, imageHeight-i, ConvertColor(color, samplesPerPixel))
 		}
 	}
 	outfile, err := os.Create("test.png")
