@@ -46,7 +46,6 @@ func GetRandomVectorInUnitSphere() Vec3 {
 		randpt := RandomVectorByRange(-1, 1)
 		if randpt.LengthSquared() >= 1 {
 			continue
-
 		}
 		return randpt
 	}
@@ -99,6 +98,14 @@ func (v Vec3) LengthSquared() float64 {
 
 func (v Vec3) String() string {
 	return fmt.Sprintf("[%f, %f, %f]", v.X, v.Y, v.Z)
+}
+
+func (v Vec3) NearZero() bool {
+	const e = .000001
+	if math.Abs(v.X) < e && math.Abs(v.Y) < e && math.Abs(v.Z) < e {
+		return true
+	}
+	return false
 }
 
 //Multiply does componentwise multiplication - hadamard product

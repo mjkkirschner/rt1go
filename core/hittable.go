@@ -9,10 +9,14 @@ type HitRecord struct {
 	Normal      Vec3
 	t           float64
 	FrontFacing bool
+	HitMaterial Material
 }
 
 func (hr *HitRecord) CalculateIfHitIsFrontFacing(ray *Ray) {
 	hr.FrontFacing = Dot(ray.Direction, hr.Normal) < 0
+	if !hr.FrontFacing {
+		hr.Normal = hr.Normal.Negate()
+	}
 }
 
 type Hittable interface {
@@ -20,8 +24,9 @@ type Hittable interface {
 }
 
 type Sphere struct {
-	Center Pt3
-	Radius float64
+	Center   Pt3
+	Radius   float64
+	Material Material
 }
 
 func (s *Sphere) Hit(ray *Ray, tmin float64, tmax float64, record *HitRecord) bool {
@@ -45,6 +50,7 @@ func (s *Sphere) Hit(ray *Ray, tmin float64, tmax float64, record *HitRecord) bo
 	record.Hitpoint = ray.At(root)
 	record.Normal = (record.Hitpoint.Subtract(s.Center)).Scale(1.0 / s.Radius)
 	record.CalculateIfHitIsFrontFacing(ray)
+	record.HitMaterial = *&s.Material
 	return true
 
 }
