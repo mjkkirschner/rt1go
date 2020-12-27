@@ -5,7 +5,7 @@ import (
 )
 
 type HitRecord struct {
-	hitpoint    Pt3
+	Hitpoint    Pt3
 	Normal      Vec3
 	t           float64
 	FrontFacing bool
@@ -42,8 +42,8 @@ func (s *Sphere) Hit(ray *Ray, tmin float64, tmax float64, record *HitRecord) bo
 		}
 	}
 	record.t = root
-	record.hitpoint = ray.At(root)
-	record.Normal = (record.hitpoint.Subtract(s.Center)).Scale(1.0 / s.Radius)
+	record.Hitpoint = ray.At(root)
+	record.Normal = (record.Hitpoint.Subtract(s.Center)).Scale(1.0 / s.Radius)
 	record.CalculateIfHitIsFrontFacing(ray)
 	return true
 

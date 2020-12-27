@@ -4,7 +4,14 @@ import (
 	"fmt"
 	"image/color"
 	"math"
+	"math/rand"
 )
+
+//Vec3 contains 3 components - can
+//be used to represent colors, points, vectors etc.
+type Vec3 struct {
+	X, Y, Z float64
+}
 
 func Clamp(x float64, min float64, max float64) float64 {
 	if x < min {
@@ -16,15 +23,39 @@ func Clamp(x float64, min float64, max float64) float64 {
 	return x
 }
 
+func remap(x, min, max float64) float64 {
+	return x*(max-min) + min
+}
+
+func RandomVector() Vec3 {
+	return NewVector3(rand.Float64(), rand.Float64(), rand.Float64())
+}
+
+func RandomVectorByRange(min, max float64) Vec3 {
+	x := remap(rand.Float64(), min, max)
+	y := remap(rand.Float64(), min, max)
+	z := remap(rand.Float64(), min, max)
+
+	return NewVector3(x, y, z)
+
+}
+
+func GetRandomVectorInUnitSphere() Vec3 {
+	//while loop.
+	for i := 0; i < 1; {
+		randpt := RandomVectorByRange(-1, 1)
+		if randpt.LengthSquared() >= 1 {
+			continue
+
+		}
+		return randpt
+	}
+	return Vec3{}
+}
+
 //TODO - don't do this
 type Col3 = Vec3
 type Pt3 = Vec3
-
-//Vec3 contains 3 compoents - can
-//be used to represent colors, points, vectors etc.
-type Vec3 struct {
-	X, Y, Z float64
-}
 
 //New constructs a vec3 by components
 func NewVector3(x float64, y float64, z float64) Vec3 {
