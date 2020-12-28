@@ -21,14 +21,23 @@ func testRayColor(r core.Ray, scene *[]core.Hittable, depth int) core.Col3 {
 
 		scattered := core.Ray{}
 		attenuation := core.Col3{}
-		if (hit.HitMaterial).Scatter(&r, &hit, &attenuation, &scattered) {
-			return core.Multiply(attenuation, testRayColor(scattered, scene, depth-1))
+		emitted := core.Col3{}
+		//man - this syntax... TODO - split up.
+		if light, ok := hit.HitMaterial.(*core.DiffuseLightMaterial); ok {
+			emitted = light.Emit(0, 0, &hit.Hitpoint)
 		}
-		return core.Col3{0, 0, 0}
+		if (hit.HitMaterial).Scatter(&r, &hit, &attenuation, &scattered) {
+			return emitted.Add(core.Multiply(attenuation, testRayColor(scattered, scene, depth-1)))
+		} else {
+			return emitted
+		}
+
 	}
-	dn := core.Normalize(r.Direction)
-	var t = (dn.Y + 1.0) * .5
-	return core.Vec3{1, 1, 1}.Scale((1.0 - t)).Add(core.NewVector3(.5*1, .7*1, 1.0*1).Scale((t)))
+	return testRayNoHitColor()
+}
+
+func testRayNoHitColor() core.Col3 {
+	return core.Col3{.01, .01, .1}
 }
 
 func ConvertColor(color core.Col3, samples int) color.RGBA {
@@ -46,7 +55,7 @@ func main() {
 	fmt.Println("creating a scene with some spheres")
 
 	scene := []core.Hittable{&core.Sphere{core.Vec3{0, 0, -1}, 0.5, &core.DiffuseMaterial{core.Col3{1, 0, 0}}},
-		&core.Sphere{core.Vec3{0, -100.5, -1}, 100, &core.DiffuseMaterial{core.Col3{.7, .5, 0}}}}
+		&core.Sphere{core.Vec3{0, -100.5, -1}, 100, &core.DiffuseLightMaterial{core.Col3{.2, .5, .9}}}}
 
 	for i := 0; i < 300; i++ {
 		newSphere := core.Sphere{core.Vec3{rand.Float64()*100.0 - 50, rand.Float64()*100.0 - 50, rand.Float64()*100.0 - 50}, rand.Float64() * 5.0,
@@ -57,7 +66,7 @@ func main() {
 	fmt.Println("creating camera and image")
 	const imageWidth int = 640
 	const imageHeight int = 480
-	const samplesPerPixel = 10
+	const samplesPerPixel = 30
 	const maxDepth = 50
 	img := image.NewRGBA(image.Rect(0, 0, imageWidth, imageHeight))
 	cam := core.NewCamera(2, 2.66666666667, 1, core.NewVector3(0, 0, 0))
