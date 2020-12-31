@@ -40,6 +40,15 @@ func RandomVectorByRange(min, max float64) Vec3 {
 
 }
 
+func RandomUnitSphereSample2() Vec3 {
+	r1 := rand.Float64()
+	r2 := rand.Float64()
+	x := math.Cos(2.0*math.Pi*r1) * 2.0 * math.Sqrt(r2*(1.0-r2))
+	y := math.Sin(2.0*math.Pi*r1) * 2.0 * math.Sqrt(r2*(1.0-r2))
+	z := 1.0 - 2.0*r2
+	return Vec3{x, y, z}
+}
+
 func GetRandomVectorInUnitSphere() Vec3 {
 	//while loop.
 	for i := 0; i < 1; {

@@ -11,7 +11,7 @@ type DiffuseMaterial struct {
 func (mat *DiffuseMaterial) Scatter(rayIn *Ray, hitRecord *HitRecord, attenuation *Col3, scatteredRay *Ray) bool {
 	norm := hitRecord.Normal
 
-	scatterDirection := norm.Add(GetRandomVectorInUnitSphere())
+	scatterDirection := norm.Add(Normalize(GetRandomVectorInUnitSphere()))
 	if scatterDirection.NearZero() {
 		scatterDirection = norm
 	}

@@ -12,7 +12,7 @@ func (s *Sphere) Hit(ray *Ray, tmin float64, tmax float64, record *HitRecord) bo
 	oc := ray.Origin.Subtract(s.Center)
 	a := Dot(ray.Direction, ray.Direction)
 	b := 2.0 * Dot(oc, ray.Direction)
-	c := Dot(oc, oc) - s.Radius*s.Radius
+	c := Dot(oc, oc) - (s.Radius * s.Radius)
 	discriminant := b*b - 4*a*c
 	if discriminant < 0 {
 		return false
