@@ -150,6 +150,15 @@ func Reflect(v *Vec3, n *Vec3) Vec3 {
 	return v.Subtract(n.Scale(2 * Dot(*v, *n)))
 }
 
+//TODO research the proof of this
+func Refract(unitVectorIn *Vec3, normal *Vec3, refractionRatio float64) Vec3 {
+	cos_theta := math.Min(Dot(unitVectorIn.Negate(), *normal), 1.0)
+	//relative to normal.
+	refractedRayOutPerpendicularComponents := (unitVectorIn.Add(normal.Scale(cos_theta))).Scale(refractionRatio)
+	refractedRayOutParallelComponents := normal.Scale(-math.Sqrt(math.Abs(1.0 - refractedRayOutPerpendicularComponents.LengthSquared())))
+	return refractedRayOutParallelComponents.Add(refractedRayOutPerpendicularComponents)
+}
+
 func Test() {
 	println("inside core package")
 }
