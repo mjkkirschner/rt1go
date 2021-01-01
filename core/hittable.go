@@ -16,6 +16,7 @@ func (hr *HitRecord) CalculateIfHitIsFrontFacing(ray *Ray) {
 }
 
 type Hittable interface {
+	GetMaterial() Material
 	Hit(ray *Ray, tmin float64, tmax float64, record *HitRecord) bool
 }
 

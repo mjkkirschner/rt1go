@@ -113,9 +113,9 @@ func getLights(scene *[]core.Hittable) []core.Hittable {
 	lights := make([]core.Hittable, 0)
 
 	for i := 0; i < len(*scene); i++ {
-		sphere := ((*scene)[i]).(*core.Sphere)
-		if _, ok := sphere.Material.(*core.DiffuseLightMaterial); ok {
-			lights = append(lights, sphere)
+		item := ((*scene)[i])
+		if _, ok := item.GetMaterial().(*core.DiffuseLightMaterial); ok {
+			lights = append(lights, item)
 		}
 	}
 	return lights
@@ -150,18 +150,22 @@ func main() {
 
 	scene := []core.Hittable{&core.Sphere{core.Vec3{1, .5, -6}, 0.5, &core.DiffuseLightMaterial{core.Col3{1, .8, .1}}},
 		&core.Sphere{core.Vec3{0, -101.5, -1}, 100, &core.MetalMaterial{core.Col3{1, 1, 1}, .2}},
+		&core.Triangle{Verts: []core.Vec3{core.Vec3{0, 0, -1},
+			core.Vec3{-2, 0, -10},
+			core.Vec3{-2, 3, -10}},
+			Material: &core.DiffuseLightMaterial{core.Col3{1, 0, 0}}},
 	}
 
-	for i := 0; i < 300; i++ {
-		newSphere := core.Sphere{core.Vec3{rand.Float64()*100.0 - 50, rand.Float64()*100.0 - 50, rand.Float64()*100.0 - 50}, rand.Float64() * 5.0,
-			&core.RefractiveMaterial{1.5}}
-		scene = append(scene, &newSphere)
-	}
+	// for i := 0; i < 300; i++ {
+	// 	newSphere := core.Sphere{core.Vec3{rand.Float64()*100.0 - 50, rand.Float64()*100.0 - 50, rand.Float64()*100.0 - 50}, rand.Float64() * 5.0,
+	// 		&core.RefractiveMaterial{1.5}}
+	// 	scene = append(scene, &newSphere)
+	// }
 
 	fmt.Println("creating camera and image")
 	const imageWidth int = 640
 	const imageHeight int = 480
-	const samplesPerPixel = 32
+	const samplesPerPixel = 1
 	const maxDepth = 5
 	img := image.NewRGBA(image.Rect(0, 0, imageWidth, imageHeight))
 	cam := core.NewCamera(2, 2.66666666667, 1, core.NewVector3(0, 0, 0))
