@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"rt1go/core"
+	"runtime"
 )
 
 func calculateDirectLightingForAllLights(hit *core.HitRecord, lights *[]core.Hittable, scene *[]core.Hittable) core.Col3 {
@@ -18,7 +19,7 @@ func calculateDirectLightingForAllLights(hit *core.HitRecord, lights *[]core.Hit
 		//generate random point somewhere on the light
 		//TODO make a light interface that might be able to give us a random point on the surface of the light.
 		light := (*lights)[i]
-		const lightScaler = 1.1
+		const lightScaler = 1.5
 		if sphere, ok := light.(*core.Sphere); ok {
 
 			//instead of actually using this point - we want to use it as a starting point
@@ -67,7 +68,12 @@ func calculateDirectLightingForAllLights(hit *core.HitRecord, lights *[]core.Hit
 
 		}
 	}
-	return outputColor.Scale(1.0 / float64(len(*lights)))
+	numLights := float64(len(*lights))
+	//don't divide by 0
+	if numLights < 1 {
+		numLights = 1
+	}
+	return outputColor.Scale(1.0 / numLights)
 }
 
 func testRayColor(r core.Ray, scene *[]core.Hittable, depth int) core.Col3 {
@@ -116,15 +122,24 @@ func getLights(scene *[]core.Hittable) []core.Hittable {
 }
 
 func testRayNoHitColor(ray *core.Ray) core.Col3 {
-	return core.Col3{.01, .01, .01}
+	t := (core.Normalize(ray.Direction).Y + 1.0) * .5
+	return (core.Col3{1.0, 1.0, 1.0}.Add(core.Col3{.5, .7, 1.0}.Scale(t))).Scale(1.0 - t)
 }
 
 func ConvertColor(color core.Col3, samples int) color.RGBA {
 	intermediateCol := color.Scale(1.0 / float64(samples))
+	R := core.Clamp(intermediateCol.X, 0, 1)
+	G := core.Clamp(intermediateCol.Y, 0, 1)
+	B := core.Clamp(intermediateCol.Z, 0, 1)
 	final := core.Col3{
-		math.Sqrt(intermediateCol.X),
-		math.Sqrt(intermediateCol.Y),
-		math.Sqrt(intermediateCol.Z)}.Scale(255).ToRGBA()
+		math.Sqrt(R),
+		math.Sqrt(G),
+		math.Sqrt(B)}.Scale(255).ToRGBA()
+
+	if final.B == 255 && final.R == 1 {
+		fmt.Println(final)
+		runtime.Breakpoint()
+	}
 	return final
 }
 
@@ -134,7 +149,7 @@ func main() {
 	fmt.Println("creating a scene with some spheres")
 
 	scene := []core.Hittable{&core.Sphere{core.Vec3{1, .5, -6}, 0.5, &core.DiffuseLightMaterial{core.Col3{1, .8, .1}}},
-		&core.Sphere{core.Vec3{0, -101.5, -1}, 100, &core.DiffuseMaterial{core.Col3{1, 1, 1}}}}
+		&core.Sphere{core.Vec3{0, -101.5, -1}, 100, &core.MetalMaterial{core.Col3{1, 1, 1}, .1}}}
 
 	for i := 0; i < 300; i++ {
 		newSphere := core.Sphere{core.Vec3{rand.Float64()*100.0 - 50, rand.Float64()*100.0 - 50, rand.Float64()*100.0 - 50}, rand.Float64() * 5.0,
@@ -145,7 +160,7 @@ func main() {
 	fmt.Println("creating camera and image")
 	const imageWidth int = 640
 	const imageHeight int = 480
-	const samplesPerPixel = 128
+	const samplesPerPixel = 64
 	const maxDepth = 5
 	img := image.NewRGBA(image.Rect(0, 0, imageWidth, imageHeight))
 	cam := core.NewCamera(2, 2.66666666667, 1, core.NewVector3(0, 0, 0))
@@ -165,7 +180,7 @@ func main() {
 			//I think this is a ppm vs goimage discrepancy (is 0,0 top corner or bottom issue)
 			img.SetRGBA(j, imageHeight-i, ConvertColor(color, samplesPerPixel))
 		}
-		println(i)
+		fmt.Println("completed line", i, "of ", imageHeight)
 	}
 	outfile, err := os.Create("test.png")
 	if err != nil {

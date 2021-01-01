@@ -146,6 +146,10 @@ func (v Vec3) ToRGBA() color.RGBA {
 	return col
 }
 
+func Reflect(v *Vec3, n *Vec3) Vec3 {
+	return v.Subtract(n.Scale(2 * Dot(*v, *n)))
+}
+
 func Test() {
 	println("inside core package")
 }
