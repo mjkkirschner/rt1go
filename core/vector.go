@@ -132,9 +132,10 @@ func Dot(v Vec3, u Vec3) float64 {
 }
 
 func Cross(v Vec3, u Vec3) Vec3 {
-	return NewVector3(v.Y*u.Z-v.Z*u.Y,
+	return NewVector3(
+		v.Y*u.Z-v.Z*u.Y,
 		v.Z*u.X-v.X*u.Z,
-		v.X*u.Y-v.Y-u.X)
+		v.X*u.Y-v.Y*u.X)
 }
 
 func Normalize(v Vec3) Vec3 {

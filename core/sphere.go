@@ -1,6 +1,9 @@
 package core
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 type Sphere struct {
 	Center   Pt3
@@ -48,19 +51,21 @@ func (tri *Triangle) Hit(ray *Ray, tmin float64, tmax float64, record *HitRecord
 	// do we hit the plane?
 
 	//tri norm by edges:
-	A := tri.Verts[0]
+	C := tri.Verts[0]
 	B := tri.Verts[1]
-	C := tri.Verts[2]
+	A := tri.Verts[2]
 
 	norm := Normalize(Cross(B.Subtract(A), C.Subtract(A)))
 
 	//ray is parallel to tri - no intersection
-	if Dot(norm, ray.Direction) == 0 {
+	normDotDir := Dot(norm, ray.Direction)
+	if normDotDir == 0 {
+		fmt.Println("tri is perpendicular to ray")
 		return false
 	}
 
 	d := Dot(norm, A)
-	t := (d - Dot(norm, ray.Origin)) / Dot(norm, ray.Direction)
+	t := (d - Dot(norm, ray.Origin)) / normDotDir
 
 	if t < tmin || t > tmax {
 		return false
@@ -69,9 +74,9 @@ func (tri *Triangle) Hit(ray *Ray, tmin float64, tmax float64, record *HitRecord
 	intersectionPointQ := ray.At(t)
 
 	//now do tri inside out testing using q.
-	term1 := Dot(Cross(B.Subtract(A), intersectionPointQ.Subtract(A)), norm) >= 0
-	term2 := Dot(Cross(C.Subtract(B), intersectionPointQ.Subtract(B)), norm) >= 0
-	term3 := Dot(Cross(A.Subtract(C), intersectionPointQ.Subtract(C)), norm) >= 0
+	term1 := Dot(Normalize(Cross(B.Subtract(A), intersectionPointQ.Subtract(A))), norm) >= 0
+	term2 := Dot(Normalize(Cross(C.Subtract(B), intersectionPointQ.Subtract(B))), norm) >= 0
+	term3 := Dot(Normalize(Cross(A.Subtract(C), intersectionPointQ.Subtract(C))), norm) >= 0
 
 	if term1 && term2 && term3 {
 		//return data
