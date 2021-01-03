@@ -6,7 +6,8 @@ References:
 - [x] send rays towards light objects
 - [x] specular/refecltive rays for metal etc.
 - [x] multicore - samples are split into goroutines, but other strategies are untested
-- [] positionable camera
+- [x] positionable camera
+- [] specular highlights
 - [] update view progress
 - [x] ray tri intersection
 - [~] obj/stl loading

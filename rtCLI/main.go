@@ -21,7 +21,7 @@ func calculateDirectLightingForAllLights(hit *core.HitRecord, lights *[]core.Hit
 		//generate random point somewhere on the light
 		//TODO make a light interface that might be able to give us a random point on the surface of the light.
 		light := (*lights)[i]
-		const lightScaler = 1.5
+
 		if sphere, ok := light.(*core.Sphere); ok {
 
 			//instead of actually using this point - we want to use it as a starting point
@@ -61,8 +61,7 @@ func calculateDirectLightingForAllLights(hit *core.HitRecord, lights *[]core.Hit
 					solidAngle
 
 				val1 := testRayColor(scatteredRay, scene, 1)
-
-				val2 := val1.Scale(gx0x1).Scale(lightScaler)
+				val2 := val1.Scale(gx0x1)
 
 				outputColor = outputColor.Add(val2)
 				continue
@@ -94,7 +93,7 @@ func testRayColor(r core.Ray, scene *[]core.Hittable, depth int) core.Col3 {
 		//TODO we may need to add a check that this only gets called from our direct light pass
 		//to avoid a double count...
 		if light, ok := hit.HitMaterial.(*core.DiffuseLightMaterial); ok {
-			emitted = light.Emit(0, 0, &hit.Hitpoint)
+			emitted = light.Emit(0, 0, &hit.Hitpoint).Scale(light.IntensityMultipler)
 		}
 		if (hit.HitMaterial).Scatter(&r, &hit, &attenuation, &scattered) {
 			lights := getLights(scene)
@@ -124,6 +123,7 @@ func getLights(scene *[]core.Hittable) []core.Hittable {
 }
 
 func testRayNoHitColor(ray *core.Ray) core.Col3 {
+	return core.Vec3{}
 	t := (core.Normalize(ray.Direction).Y + 1.0) * .5
 	return (core.Col3{1.0, 1.0, 1.0}.Add(core.Col3{.5, .7, 1.0}.Scale(t))).Scale(1.0 - t)
 }
@@ -150,17 +150,12 @@ func main() {
 
 	fmt.Println("creating a scene with some spheres")
 
-	scene := []core.Hittable{}
-	/*&core.Sphere{core.Vec3{1, .5, -6}, 0.5, &core.DiffuseLightMaterial{core.Col3{1, .8, .1}}},
-		&core.Sphere{core.Vec3{0, -101.5, -1}, 100, &core.MetalMaterial{core.Col3{1, 1, 1}, .2}},
-		&core.Triangle{Verts: []core.Vec3{
-			core.Vec3{0, 0, -10},
-			core.Vec3{10, 0, -10},
-			core.Vec3{10, 10, -10}},
-			Material: &core.DiffuseMaterial{core.Col3{1, 0, 0}}},
-
+	scene := []core.Hittable{
+		&core.Sphere{core.Vec3{1, 2, -6}, 0.5, &core.DiffuseLightMaterial{core.Col3{.4, .3, .8}, 1.0}},
+		&core.Sphere{core.Vec3{2, 1, -6}, 0.5, &core.DiffuseLightMaterial{core.Col3{1, .8, .1}, 3.5}},
+		//	&core.Sphere{core.Vec3{0, -101.5, -1}, 100, &core.MetalMaterial{core.Col3{1, 1, 1}, .2}},
 	}
-	*/
+
 	// for i := 0; i < 300; i++ {
 	// 	newSphere := core.Sphere{core.Vec3{rand.Float64()*100.0 - 50, rand.Float64()*100.0 - 50, rand.Float64()*100.0 - 50}, rand.Float64() * 5.0,
 	// 		&core.RefractiveMaterial{1.5}}
@@ -170,10 +165,10 @@ func main() {
 	fmt.Println("creating camera and image")
 	const imageWidth int = 640
 	const imageHeight int = 480
-	const samplesPerPixel = 32
+	const samplesPerPixel = 512
 	const maxDepth = 5
 	img := image.NewRGBA(image.Rect(0, 0, imageWidth, imageHeight))
-	cam := core.NewCamera(2, 2.66666666667, 1, core.NewVector3(0, 0, 0))
+	cam := core.NewCameraByPoints(core.Pt3{-2, 2, 1}, core.Pt3{0, 0, -5}, core.Vec3{0, 1, 0}, 60.0, 4.0/3.0)
 	mesh := core.LoadMeshFromOBJAtPath("./static/models/simplescene2.obj")
 
 	for _, face := range mesh.Faces {
@@ -181,7 +176,7 @@ func main() {
 		verts[0] = mesh.Verts[face.VertIndicies[0]-1].Subtract(core.Vec3{0, 0, 5})
 		verts[1] = mesh.Verts[face.VertIndicies[1]-1].Subtract(core.Vec3{0, 0, 5})
 		verts[2] = mesh.Verts[face.VertIndicies[2]-1].Subtract(core.Vec3{0, 0, 5})
-		scene = append(scene, &core.Triangle{Verts: verts[:], Material: &core.DiffuseMaterial{core.Col3{1, 0, 0}}})
+		scene = append(scene, &core.Triangle{Verts: verts[:], Material: &core.DiffuseMaterial{core.Col3{.7, .7, .7}}})
 	}
 	start := time.Now()
 	var wg = &sync.WaitGroup{}
