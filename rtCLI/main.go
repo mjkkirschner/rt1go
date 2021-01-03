@@ -123,7 +123,7 @@ func getLights(scene *[]core.Hittable) []core.Hittable {
 }
 
 func testRayNoHitColor(ray *core.Ray) core.Col3 {
-	return core.Vec3{}
+	//return core.Vec3{}
 	t := (core.Normalize(ray.Direction).Y + 1.0) * .5
 	return (core.Col3{1.0, 1.0, 1.0}.Add(core.Col3{.5, .7, 1.0}.Scale(t))).Scale(1.0 - t)
 }
@@ -165,7 +165,7 @@ func main() {
 	fmt.Println("creating camera and image")
 	const imageWidth int = 640
 	const imageHeight int = 480
-	const samplesPerPixel = 512
+	const samplesPerPixel = 128
 	const maxDepth = 5
 	img := image.NewRGBA(image.Rect(0, 0, imageWidth, imageHeight))
 	cam := core.NewCameraByPoints(core.Pt3{-2, 2, 1}, core.Pt3{0, 0, -5}, core.Vec3{0, 1, 0}, 60.0, 4.0/3.0)
@@ -178,6 +178,10 @@ func main() {
 		verts[2] = mesh.Verts[face.VertIndicies[2]-1].Subtract(core.Vec3{0, 0, 5})
 		scene = append(scene, &core.Triangle{Verts: verts[:], Material: &core.DiffuseMaterial{core.Col3{.7, .7, .7}}})
 	}
+
+	bvhForScene := core.NewBVHNode(&scene, 0, len(scene))
+	scene = []core.Hittable{&bvhForScene}
+
 	start := time.Now()
 	var wg = &sync.WaitGroup{}
 	for i := 0; i < imageHeight; i++ {

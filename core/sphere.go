@@ -36,6 +36,12 @@ func (s *Sphere) Hit(ray *Ray, tmin float64, tmax float64, record *HitRecord) bo
 	return true
 }
 
+func (s *Sphere) BoundingBox(outAABB *AABB) {
+	*outAABB = AABB{
+		s.Center.Subtract(Vec3{s.Radius, s.Radius, s.Radius}),
+		s.Center.Add(Vec3{s.Radius, s.Radius, s.Radius})}
+}
+
 func (s *Sphere) GetMaterial() Material {
 	return s.Material
 }
@@ -92,4 +98,31 @@ func (tri *Triangle) Hit(ray *Ray, tmin float64, tmax float64, record *HitRecord
 }
 func (t *Triangle) GetMaterial() Material {
 	return t.Material
+}
+
+func (tri *Triangle) BoundingBox(outAABB *AABB) {
+
+	//march all coordinates and find max and min
+	minx := math.Min(tri.Verts[0].X, tri.Verts[1].X)
+	minx = math.Min(minx, tri.Verts[2].X)
+
+	miny := math.Min(tri.Verts[0].Y, tri.Verts[1].Y)
+	miny = math.Min(miny, tri.Verts[2].Y)
+
+	minz := math.Min(tri.Verts[0].Z, tri.Verts[1].Z)
+	minz = math.Min(minz, tri.Verts[2].Z)
+
+	maxx := math.Max(tri.Verts[0].X, tri.Verts[1].X)
+	maxx = math.Max(maxx, tri.Verts[2].X)
+
+	maxy := math.Max(tri.Verts[0].Y, tri.Verts[1].Y)
+	maxy = math.Max(maxy, tri.Verts[2].Y)
+
+	maxz := math.Max(tri.Verts[0].Z, tri.Verts[1].Z)
+	maxz = math.Max(maxz, tri.Verts[2].Z)
+
+	offset := .00001
+
+	*outAABB = AABB{Pt3{minx - offset, miny - offset, minz - offset}, Pt3{maxx + offset, maxy + offset, maxz + offset}}
+
 }

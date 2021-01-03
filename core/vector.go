@@ -160,6 +160,18 @@ func Refract(unitVectorIn *Vec3, normal *Vec3, refractionRatio float64) Vec3 {
 	return refractedRayOutParallelComponents.Add(refractedRayOutPerpendicularComponents)
 }
 
+func (vec *Vec3) Index(index int) float64 {
+	switch index {
+	case 0:
+		return vec.X
+	case 1:
+		return vec.Y
+	case 2:
+		return vec.Z
+	}
+	return math.NaN()
+}
+
 func Test() {
 	println("inside core package")
 }
