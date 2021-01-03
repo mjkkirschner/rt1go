@@ -151,8 +151,8 @@ func main() {
 	fmt.Println("creating a scene with some spheres")
 
 	scene := []core.Hittable{
-		&core.Sphere{core.Vec3{1, 2, -6}, 0.5, &core.DiffuseLightMaterial{core.Col3{.4, .3, .8}, 1.0}},
-		&core.Sphere{core.Vec3{2, 1, -6}, 0.5, &core.DiffuseLightMaterial{core.Col3{1, .8, .1}, 3.5}},
+		&core.Sphere{core.Vec3{.7, 1, 0}, 0.2, &core.DiffuseMaterial{core.Col3{.8, .6, .6}}},
+		&core.Sphere{core.Vec3{0, 1.2, 0}, 0.5, &core.DiffuseLightMaterial{core.Col3{1, .8, .1}, 3.5}},
 		//	&core.Sphere{core.Vec3{0, -101.5, -1}, 100, &core.MetalMaterial{core.Col3{1, 1, 1}, .2}},
 	}
 
@@ -163,20 +163,30 @@ func main() {
 	// }
 
 	fmt.Println("creating camera and image")
-	const imageWidth int = 640
-	const imageHeight int = 480
+	const imageWidth int = 1024
+	const imageHeight int = 768
 	const samplesPerPixel = 128
 	const maxDepth = 5
 	img := image.NewRGBA(image.Rect(0, 0, imageWidth, imageHeight))
-	cam := core.NewCameraByPoints(core.Pt3{-2, 2, 1}, core.Pt3{0, 0, -5}, core.Vec3{0, 1, 0}, 60.0, 4.0/3.0)
-	mesh := core.LoadMeshFromOBJAtPath("./static/models/simplescene2.obj")
+	cam := core.NewCameraByPoints(core.Pt3{-2, 2, -5}, core.Pt3{0, 0, 0}, core.Vec3{0, 1, 0}, 45.0, 4.0/3.0)
+	meshbox := core.LoadMeshFromOBJAtPath("./static/walls.obj")
 
-	for _, face := range mesh.Faces {
+	for _, face := range meshbox.Faces {
 		verts := [3]core.Vec3{}
-		verts[0] = mesh.Verts[face.VertIndicies[0]-1].Subtract(core.Vec3{0, 0, 5})
-		verts[1] = mesh.Verts[face.VertIndicies[1]-1].Subtract(core.Vec3{0, 0, 5})
-		verts[2] = mesh.Verts[face.VertIndicies[2]-1].Subtract(core.Vec3{0, 0, 5})
-		scene = append(scene, &core.Triangle{Verts: verts[:], Material: &core.DiffuseMaterial{core.Col3{.7, .7, .7}}})
+		verts[0] = meshbox.Verts[face.VertIndicies[0]-1]
+		verts[1] = meshbox.Verts[face.VertIndicies[1]-1]
+		verts[2] = meshbox.Verts[face.VertIndicies[2]-1]
+		scene = append(scene, &core.Triangle{Verts: verts[:], Material: &core.DiffuseMaterial{core.Vec3{.2, .6, .6}}})
+	}
+
+	meshcubes := core.LoadMeshFromOBJAtPath("./static/glasscubes.obj")
+
+	for _, face := range meshcubes.Faces {
+		verts := [3]core.Vec3{}
+		verts[0] = meshcubes.Verts[face.VertIndicies[0]-1]
+		verts[1] = meshcubes.Verts[face.VertIndicies[1]-1]
+		verts[2] = meshcubes.Verts[face.VertIndicies[2]-1]
+		scene = append(scene, &core.Triangle{Verts: verts[:], Material: &core.RefractiveMaterial{1.5}})
 	}
 
 	bvhForScene := core.NewBVHNode(&scene, 0, len(scene))

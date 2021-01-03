@@ -10,9 +10,9 @@ import (
 )
 
 type FaceData struct {
-	VertIndicies     [3]int
-	NormalIndicies   [3]int
-	TexCoordIndicies [3]int
+	VertIndicies     []int
+	NormalIndicies   []int
+	TexCoordIndicies []int
 }
 
 type Mesh struct {
@@ -66,7 +66,7 @@ func LoadTrisFromOBJatPath(path string) []FaceData {
 		if strings.HasPrefix(faceDataChunks[0], "f") {
 			currentFace := FaceData{}
 			//TODO for now we only handle vert position data
-			for i, faceDataChunk := range faceDataChunks[1:] {
+			for _, faceDataChunk := range faceDataChunks[1:] {
 
 				dataIndicies := strings.Split(faceDataChunk, "/")
 				for dataTypeIndex, chunk := range dataIndicies {
@@ -74,14 +74,25 @@ func LoadTrisFromOBJatPath(path string) []FaceData {
 
 					switch dataTypeIndex {
 					case 0:
-						currentFace.VertIndicies[i] = int(actualIndexValue)
+						currentFace.VertIndicies = append(currentFace.VertIndicies, int(actualIndexValue))
 					case 1:
-						currentFace.NormalIndicies[i] = int(actualIndexValue)
+						currentFace.NormalIndicies = append(currentFace.NormalIndicies, int(actualIndexValue))
 					case 2:
-						currentFace.TexCoordIndicies[i] = int(actualIndexValue)
+						currentFace.TexCoordIndicies = append(currentFace.TexCoordIndicies, int(actualIndexValue))
 					}
 				}
 
+			}
+			//there are 4 verts for this face or more - this is a tri strip
+			vertCount := len(faceDataChunks[1:])
+			if vertCount > 3 {
+				for i := 3; i < vertCount; i++ {
+					newFace := FaceData{VertIndicies: []int{currentFace.VertIndicies[i-3], currentFace.VertIndicies[i-1], currentFace.VertIndicies[i]},
+						NormalIndicies:   []int{currentFace.NormalIndicies[i-3], currentFace.NormalIndicies[i-1], currentFace.NormalIndicies[i]},
+						TexCoordIndicies: []int{currentFace.TexCoordIndicies[i-3], currentFace.TexCoordIndicies[i-1], currentFace.TexCoordIndicies[i]}}
+
+					tris = append(tris, newFace)
+				}
 			}
 			tris = append(tris, currentFace)
 		}
