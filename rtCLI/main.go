@@ -1,17 +1,18 @@
 package main
 
+//#include "../cuda/render.h"
+//#cgo LDFLAGS: -L../cuda/ -lrender
+import "C"
 import (
 	"fmt"
 	"image"
 	"image/color"
 	"image/png"
 	"math"
-	"math/rand"
 	"os"
 	"rt1go/core"
-	"runtime"
-	"sync"
 	"time"
+	"unsafe"
 )
 
 func calculateDirectLightingForAllLights(hit *core.HitRecord, lights *[]core.Hittable, scene *[]core.Hittable) core.Col3 {
@@ -123,25 +124,15 @@ func getLights(scene *[]core.Hittable) []core.Hittable {
 }
 
 func testRayNoHitColor(ray *core.Ray) core.Col3 {
-	//return core.Vec3{}
+	return core.Vec3{}
 	t := (core.Normalize(ray.Direction).Y + 1.0) * .5
 	return (core.Col3{1.0, 1.0, 1.0}.Add(core.Col3{.5, .7, 1.0}.Scale(t))).Scale(1.0 - t)
 }
 
 func ConvertColor(color core.Col3, samples int) color.RGBA {
-	intermediateCol := color.Scale(1.0 / float64(samples))
-	R := core.Clamp(intermediateCol.X, 0, 1)
-	G := core.Clamp(intermediateCol.Y, 0, 1)
-	B := core.Clamp(intermediateCol.Z, 0, 1)
-	final := core.Col3{
-		math.Sqrt(R),
-		math.Sqrt(G),
-		math.Sqrt(B)}.Scale(255).ToRGBA()
 
-	if final.B == 255 && final.R == 1 {
-		fmt.Println(final)
-		runtime.Breakpoint()
-	}
+	final := color.ToRGBA()
+
 	return final
 }
 
@@ -165,10 +156,10 @@ func main() {
 	fmt.Println("creating camera and image")
 	const imageWidth int = 1024
 	const imageHeight int = 768
-	const samplesPerPixel = 128
-	const maxDepth = 5
+	const samplesPerPixel = 1
+	const maxDepth = 50
 	img := image.NewRGBA(image.Rect(0, 0, imageWidth, imageHeight))
-	cam := core.NewCameraByPoints(core.Pt3{-2, 2, -5}, core.Pt3{0, 0, 0}, core.Vec3{0, 1, 0}, 45.0, 4.0/3.0)
+	//cam := core.NewCameraByPoints(core.Pt3{-2, 2, -5}, core.Pt3{0, 0, 0}, core.Vec3{0, 1, 0}, 45.0, 4.0/3.0)
 	meshbox := core.LoadMeshFromOBJAtPath("./static/walls.obj")
 
 	for _, face := range meshbox.Faces {
@@ -177,6 +168,7 @@ func main() {
 		verts[1] = meshbox.Verts[face.VertIndicies[1]-1]
 		verts[2] = meshbox.Verts[face.VertIndicies[2]-1]
 		scene = append(scene, &core.Triangle{Verts: verts[:], Material: &core.DiffuseMaterial{core.Vec3{.2, .6, .6}}})
+
 	}
 
 	meshcubes := core.LoadMeshFromOBJAtPath("./static/glasscubes.obj")
@@ -191,34 +183,35 @@ func main() {
 
 	bvhForScene := core.NewBVHNode(&scene, 0, len(scene))
 	scene = []core.Hittable{&bvhForScene}
-
 	start := time.Now()
-	var wg = &sync.WaitGroup{}
+
+	//prep our input data that we'll send to the GPU.
+	ys := make([]int32, imageHeight)
+	xs := make([]int32, imageWidth*imageHeight)
+	var i int32
+	var j int32
+	for i = 0; i < int32(imageHeight); i++ {
+		ys[i] = i
+		for j = 0; j < int32(imageWidth); j++ {
+			xs[j] = j
+			//colors := [samplesPerPixel]core.Col3{}
+
+			//u := (float64(i) + rand.Float64()) / float64(imageHeight-1)
+			//v := (float64(j) + rand.Float64()) / float64(imageWidth-1)
+			//r := cam.GetRay(v, u)
+			//colors[s] = testRayColor(r, &scene, maxDepth)
+		}
+
+	}
+	//render calls cuda - renders on the GPU and marshalls data back to go objects.
+	renderedColors := render(&xs, &ys, imageWidth, imageHeight)
 	for i := 0; i < imageHeight; i++ {
 		for j := 0; j < imageWidth; j++ {
-			colors := [samplesPerPixel]core.Col3{}
-			for s := 0; s < samplesPerPixel; s++ {
-				wg.Add(1)
-
-				go func(s int) {
-					defer wg.Done()
-					u := (float64(i) + rand.Float64()) / float64(imageHeight-1)
-					v := (float64(j) + rand.Float64()) / float64(imageWidth-1)
-					r := cam.GetRay(v, u)
-					colors[s] = testRayColor(r, &scene, maxDepth)
-				}(s)
-
-			}
-			wg.Wait()
-			color := core.Col3{0, 0, 0}
-			for _, curCol := range colors {
-				color = color.Add(curCol)
-			}
-			//I think this is a ppm vs goimage discrepancy (is 0,0 top corner or bottom issue)
+			color := renderedColors[(i*imageWidth)+j]
 			img.SetRGBA(j, imageHeight-i, ConvertColor(color, samplesPerPixel))
 		}
-		fmt.Println("completed line", i, "of ", imageHeight)
 	}
+
 	fmt.Println(time.Since(start))
 
 	outfile, err := os.Create("test.png")
@@ -227,4 +220,30 @@ func main() {
 	}
 	png.Encode(outfile, img)
 	outfile.Close()
+}
+
+func render(i *[]int32, j *[]int32, width int, height int) []core.Col3 {
+	//for now render some colors based on pixel positions
+	//call c
+	red := make([]int32, width*height)
+	redptr := (*C.int)(unsafe.Pointer(&red[0]))
+
+	green := make([]int32, width*height)
+	greenptr := (*C.int)(unsafe.Pointer(&green[0]))
+
+	blue := make([]int32, width*height)
+	blueptr := (*C.int)(unsafe.Pointer(&blue[0]))
+
+	iptr := (*C.int)(unsafe.Pointer(&((*i)[0])))
+	jptr := (*C.int)(unsafe.Pointer(&((*j)[0])))
+
+	C.wrapper(
+		(C.int)(width), (C.int)(height), iptr, jptr,
+		redptr, greenptr, blueptr,
+	)
+	colors := make([]core.Col3, width*height)
+	for i := 0; i < width*height; i++ {
+		colors[i] = core.Col3{float64((red[i])), float64((green[i])), float64((blue[i]))}
+	}
+	return colors
 }
