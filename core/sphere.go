@@ -92,6 +92,11 @@ func (tri *Triangle) Hit(ray *Ray, tmin float64, tmax float64, record *HitRecord
 		record.Normal = norm
 		record.CalculateIfHitIsFrontFacing(ray)
 		record.HitMaterial = *&tri.Material
+		var u, v, w = BaryCoords(record, tri.Verts[0], tri.Verts[1], tri.Verts[2])
+		//use u v w to interpolate u v coords.
+		record.U = tri.UVs[0].X*u + tri.UVs[1].X*v + tri.UVs[2].X*w
+		record.V = tri.UVs[0].Y*u + tri.UVs[1].Y*v + tri.UVs[2].Y*w
+
 		return true
 	}
 	return false
@@ -125,4 +130,27 @@ func (tri *Triangle) BoundingBox(outAABB *AABB) {
 
 	*outAABB = AABB{Pt3{minx - offset, miny - offset, minz - offset}, Pt3{maxx + offset, maxy + offset, maxz + offset}}
 
+}
+
+func BaryCoords(hit *HitRecord, v0 Vec3, v1 Vec3, v2 Vec3) (float64, float64, float64) {
+
+	var p = hit.Hitpoint
+	var v0v1 = v1.Subtract(v0)
+	var v0v2 = v2.Subtract(v0)
+	var triN = Cross(v0v1, v0v2)
+	var area2 = triN.Length()
+
+	var edge1 = v2.Subtract(v1)
+	var vp1 = p.Subtract(v1)
+	var c = Cross(edge1, vp1)
+
+	var u = c.Length() / area2
+
+	var edge2 = v0.Subtract(v2)
+	var vp2 = p.Subtract(v2)
+	c = Cross(edge2, vp2)
+	var v = c.Length() / area2
+
+	var w = 1 - u - v
+	return u, v, w
 }

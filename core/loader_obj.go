@@ -16,8 +16,10 @@ type FaceData struct {
 }
 
 type Mesh struct {
-	Faces []FaceData
-	Verts []Vec3
+	Faces     []FaceData
+	Verts     []Vec3
+	TexCoords []Vec3
+	Normals   []Vec3
 }
 
 func LoadMeshFromOBJAtPath(path string) Mesh {
@@ -41,6 +43,15 @@ func LoadMeshFromOBJAtPath(path string) Mesh {
 			y, _ := strconv.ParseFloat(chunk[2], 0)
 			z, _ := strconv.ParseFloat(chunk[3], 0)
 			mesh.Verts = append(mesh.Verts, Vec3{x, y, z})
+		} else if chunk[0] == "vt" {
+			u, _ := strconv.ParseFloat(chunk[1], 0)
+			v, _ := strconv.ParseFloat(chunk[2], 0)
+			mesh.TexCoords = append(mesh.TexCoords, Vec3{u, v, 0})
+		} else if chunk[0] == "vn" {
+			x, _ := strconv.ParseFloat(chunk[1], 0)
+			y, _ := strconv.ParseFloat(chunk[2], 0)
+			z, _ := strconv.ParseFloat(chunk[3], 0)
+			mesh.Normals = append(mesh.Normals, Vec3{x, y, z})
 		}
 	}
 
@@ -75,9 +86,9 @@ func LoadTrisFromOBJatPath(path string) []FaceData {
 					switch dataTypeIndex {
 					case 0:
 						currentFace.VertIndicies = append(currentFace.VertIndicies, int(actualIndexValue))
-					case 1:
-						currentFace.NormalIndicies = append(currentFace.NormalIndicies, int(actualIndexValue))
 					case 2:
+						currentFace.NormalIndicies = append(currentFace.NormalIndicies, int(actualIndexValue))
+					case 1:
 						currentFace.TexCoordIndicies = append(currentFace.TexCoordIndicies, int(actualIndexValue))
 					}
 				}

@@ -145,6 +145,27 @@ func ConvertColor(color core.Col3, samples int) color.RGBA {
 	return final
 }
 
+func AddTrisToScene(scene *[]core.Hittable, mesh *core.Mesh, mat core.Material) {
+	for _, face := range mesh.Faces {
+		verts := [3]core.Vec3{}
+		uvs := [3]core.Vec3{}
+		norms := [3]core.Vec3{}
+		verts[0] = mesh.Verts[face.VertIndicies[0]-1]
+		verts[1] = mesh.Verts[face.VertIndicies[1]-1]
+		verts[2] = mesh.Verts[face.VertIndicies[2]-1]
+
+		uvs[0] = mesh.TexCoords[face.TexCoordIndicies[0]-1]
+		uvs[1] = mesh.TexCoords[face.TexCoordIndicies[1]-1]
+		uvs[2] = mesh.TexCoords[face.TexCoordIndicies[2]-1]
+
+		norms[0] = mesh.Normals[face.NormalIndicies[0]-1]
+		norms[1] = mesh.Normals[face.NormalIndicies[1]-1]
+		norms[2] = mesh.Normals[face.NormalIndicies[2]-1]
+
+		*scene = append(*scene, &core.Triangle{Verts: verts[:], UVs: uvs[:], Normals: norms[:], Material: mat})
+	}
+}
+
 func main() {
 	fmt.Println("let's raytrace something")
 
@@ -165,29 +186,18 @@ func main() {
 	fmt.Println("creating camera and image")
 	const imageWidth int = 1024
 	const imageHeight int = 768
-	const samplesPerPixel = 128
+	const samplesPerPixel = 8
 	const maxDepth = 5
 	img := image.NewRGBA(image.Rect(0, 0, imageWidth, imageHeight))
 	cam := core.NewCameraByPoints(core.Pt3{-2, 2, -5}, core.Pt3{0, 0, 0}, core.Vec3{0, 1, 0}, 45.0, 4.0/3.0)
 	meshbox := core.LoadMeshFromOBJAtPath("./static/walls.obj")
 
-	for _, face := range meshbox.Faces {
-		verts := [3]core.Vec3{}
-		verts[0] = meshbox.Verts[face.VertIndicies[0]-1]
-		verts[1] = meshbox.Verts[face.VertIndicies[1]-1]
-		verts[2] = meshbox.Verts[face.VertIndicies[2]-1]
-		scene = append(scene, &core.Triangle{Verts: verts[:], Material: &core.DiffuseMaterial{core.Vec3{.2, .6, .6}}})
-	}
+	var boxMat = core.DiffuseMaterial{core.Vec3{.2, .6, .6}}
+	AddTrisToScene(&scene, &meshbox, &boxMat)
 
 	meshcubes := core.LoadMeshFromOBJAtPath("./static/glasscubes.obj")
 
-	for _, face := range meshcubes.Faces {
-		verts := [3]core.Vec3{}
-		verts[0] = meshcubes.Verts[face.VertIndicies[0]-1]
-		verts[1] = meshcubes.Verts[face.VertIndicies[1]-1]
-		verts[2] = meshcubes.Verts[face.VertIndicies[2]-1]
-		scene = append(scene, &core.Triangle{Verts: verts[:], Material: &core.RefractiveMaterial{1.5}})
-	}
+	AddTrisToScene(&scene, &meshcubes, &core.RefractiveMaterial{1.5})
 
 	bvhForScene := core.NewBVHNode(&scene, 0, len(scene))
 	scene = []core.Hittable{&bvhForScene}
