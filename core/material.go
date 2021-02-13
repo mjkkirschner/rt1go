@@ -28,6 +28,6 @@ func (mat *DiffuseMaterial) Scatter(rayIn *Ray, hitRecord *HitRecord, attenuatio
 		scatterDirection = norm
 	}
 	*scatteredRay = NewRay(hitRecord.Hitpoint, scatterDirection)
-	*attenuation = Vec3{hitRecord.U, hitRecord.V, 0} //*&mat.Albedo
+	*attenuation = *&mat.Albedo //Vec3{hitRecord.U, hitRecord.V, 0} //*&mat.Albedo
 	return true
 }

@@ -172,32 +172,32 @@ func main() {
 	fmt.Println("creating a scene with some spheres")
 
 	scene := []core.Hittable{
-		&core.Sphere{core.Vec3{.7, 1, 0}, 0.2, &core.DiffuseMaterial{core.Col3{.8, .6, .6}}},
+		//		&core.Sphere{core.Vec3{.7, 1, 0}, 0.2, &core.DiffuseMaterial{core.Col3{.8, .6, .6}}},
 		&core.Sphere{core.Vec3{0, 1.2, 0}, 0.5, &core.DiffuseLightMaterial{core.Col3{1, .8, .1}, 3.5}},
-		//	&core.Sphere{core.Vec3{0, -101.5, -1}, 100, &core.MetalMaterial{core.Col3{1, 1, 1}, .2}},
+		&core.Sphere{core.Vec3{0, -100.5, 0}, 100, &core.MetalMaterial{core.Col3{1, 1, 1}, .2}},
 	}
 
-	// for i := 0; i < 300; i++ {
-	// 	newSphere := core.Sphere{core.Vec3{rand.Float64()*100.0 - 50, rand.Float64()*100.0 - 50, rand.Float64()*100.0 - 50}, rand.Float64() * 5.0,
-	// 		&core.RefractiveMaterial{1.5}}
-	// 	scene = append(scene, &newSphere)
-	// }
+	for i := 0; i < 300; i++ {
+		newSphere := core.Sphere{core.Vec3{rand.Float64()*10.0 - 5, 0, rand.Float64()*10.0 - 5}, .2,
+			&core.DiffuseMaterial{core.Vec3{.8, .6, .6}}}
+		scene = append(scene, &newSphere)
+	}
 
 	fmt.Println("creating camera and image")
 	const imageWidth int = 1024
 	const imageHeight int = 768
-	const samplesPerPixel = 8
+	const samplesPerPixel = 64
 	const maxDepth = 5
 	img := image.NewRGBA(image.Rect(0, 0, imageWidth, imageHeight))
-	cam := core.NewCameraByPoints(core.Pt3{-2, 2, -5}, core.Pt3{0, 0, 0}, core.Vec3{0, 1, 0}, 45.0, 4.0/3.0)
-	meshbox := core.LoadMeshFromOBJAtPath("./static/walls.obj")
+	cam := core.NewCameraByPoints(core.Pt3{-2, 2, -5}, core.Pt3{0, 0, 0}, core.Vec3{0, 1, 0}, 45.0, 4.0/3.0, .2, 8)
+	//meshbox := core.LoadMeshFromOBJAtPath("./static/walls.obj")
 
-	var boxMat = core.DiffuseMaterial{core.Vec3{.2, .6, .6}}
-	AddTrisToScene(&scene, &meshbox, &boxMat)
+	//var boxMat = core.DiffuseMaterial{core.Vec3{.2, .6, .6}}
+	//AddTrisToScene(&scene, &meshbox, &boxMat)
 
-	meshcubes := core.LoadMeshFromOBJAtPath("./static/glasscubes.obj")
+	//	meshcubes := core.LoadMeshFromOBJAtPath("./static/glasscubes.obj")
 
-	AddTrisToScene(&scene, &meshcubes, &core.RefractiveMaterial{1.5})
+	//AddTrisToScene(&scene, &meshcubes, &core.RefractiveMaterial{1.5})
 
 	bvhForScene := core.NewBVHNode(&scene, 0, len(scene))
 	scene = []core.Hittable{&bvhForScene}
