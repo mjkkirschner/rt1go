@@ -132,24 +132,51 @@ func (tri *Triangle) BoundingBox(outAABB *AABB) {
 
 }
 
+func BaryCoords2(hit *HitRecord, a Vec3, b Vec3, c Vec3) (float64, float64, float64) {
+
+	var p = hit.Hitpoint
+
+	var edge1 = b.Subtract(a)
+	var edge2 = c.Subtract(a)
+	var edge3 = a.Subtract(c)
+	var edge4 = c.Subtract(b)
+	var edge5 = b.Subtract(a)
+
+	var edgePB = p.Subtract(b)
+	var edgePC = p.Subtract(c)
+	var edgePA = p.Subtract(a)
+
+	var triNorm = Cross(edge1, edge2)
+	var area = triNorm.Z / 2.0
+
+	var temp1 = Cross(edge4, edgePB)
+	var temp2 = Cross(edge3, edgePC)
+	var temp3 = Cross(edge5, edgePA)
+
+	var u = (temp1.Z / 2.0) / area
+	var v = (temp2.Z / 2.0) / area
+	var w = (temp3.Z / 2.0) / area
+	return u, v, w
+}
+
 func BaryCoords(hit *HitRecord, v0 Vec3, v1 Vec3, v2 Vec3) (float64, float64, float64) {
 
 	var p = hit.Hitpoint
 	var v0v1 = v1.Subtract(v0)
 	var v0v2 = v2.Subtract(v0)
 	var triN = Cross(v0v1, v0v2)
-	var area2 = triN.Length()
+	var area = triN.Length()
 
 	var edge1 = v2.Subtract(v1)
 	var vp1 = p.Subtract(v1)
 	var c = Cross(edge1, vp1)
 
-	var u = c.Length() / area2
+	var u = c.Length() / area
 
 	var edge2 = v0.Subtract(v2)
 	var vp2 = p.Subtract(v2)
-	c = Cross(edge2, vp2)
-	var v = c.Length() / area2
+	var c2 = Cross(edge2, vp2)
+	var v = c2.Length() / area
 
 	var w = 1 - u - v
 	return u, v, w

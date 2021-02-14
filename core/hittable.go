@@ -126,7 +126,7 @@ type BvhNode struct {
 }
 
 func (node *BvhNode) GetMaterial() Material {
-	return &DiffuseMaterial{Vec3{0, 1, 0}}
+	return &DiffuseMaterial{&SolidTexture{Col3{0, 1, 0}}}
 }
 
 func NewBVHNode(hittables *[]Hittable, start int, end int) BvhNode {

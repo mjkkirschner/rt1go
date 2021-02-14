@@ -97,6 +97,11 @@ func LoadTrisFromOBJatPath(path string) []FaceData {
 			//there are 4 verts for this face or more - this is a tri strip
 			vertCount := len(faceDataChunks[1:])
 			if vertCount > 3 {
+
+				tris = append(tris, FaceData{
+					VertIndicies:     currentFace.VertIndicies[0:3],
+					NormalIndicies:   currentFace.NormalIndicies[0:3],
+					TexCoordIndicies: currentFace.TexCoordIndicies[0:3]})
 				for i := 3; i < vertCount; i++ {
 					newFace := FaceData{VertIndicies: []int{currentFace.VertIndicies[i-3], currentFace.VertIndicies[i-1], currentFace.VertIndicies[i]},
 						NormalIndicies:   []int{currentFace.NormalIndicies[i-3], currentFace.NormalIndicies[i-1], currentFace.NormalIndicies[i]},
