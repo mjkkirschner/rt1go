@@ -12,7 +12,7 @@ References:
 - [] update view progress
 - [x] ray tri intersection
 - [~] obj/stl loading
-- [] texture coords / textures
+- [x] texture coords / textures
 - [] signed distance field to mesh gen using https://github.com/deadsy/sdfx
 
 ![an image](./test.png)
