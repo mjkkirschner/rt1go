@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package rtgo;
+
+service rtgo{
+    rpc Render(RenderRequest) returns (RenderReply);
+}
+
+message RenderReply{
+    repeated Vec3 colors =1;
+}
+
+message RenderRequest{
+    repeated Mesh mesh = 1;
+    repeated Material material = 2;
+    Camera camera = 3;
+}
+
+message Camera{
+    Vec3 lookfrom = 1;
+    Vec3 lookAt = 2;
+    Vec3 vup = 3;
+    double fovDegrees =4;
+    double aspectRatio =5;
+    double aperture =6;
+    double focuslength =7;
+}
+
+message Material{
+    Texture texture = 1;
+    Vec3 albedo = 2;
+    double lightintensity = 3;
+    double roughness = 4;
+
+    enum MaterialType {
+        DiffuseMaterial = 0;
+        MetailMaterial = 1;
+        RefractiveMaterial = 2;
+        LightMaterial = 3;
+    }
+}
+
+message Texture{
+    repeated Vec3 colors =1;
+}
+
+message Mesh{
+    repeated FaceData facedata = 1;
+    repeated Vec3 verts = 2;
+    repeated Vec3 texcoords = 3;
+    repeated Vec3 normals = 4;
+}
+
+message Vec3{
+    double x =1;
+    double y =2;
+    double z =3;
+}
+
+message FaceData{
+    repeated int32 vertindicies =1;
+    repeated int32 normalindicies =2;
+    repeated int32 texcoordindicies =3;
+}
+
