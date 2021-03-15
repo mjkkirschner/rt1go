@@ -91,7 +91,7 @@ func (tri *Triangle) Hit(ray *Ray, tmin float64, tmax float64, record *HitRecord
 		//for now... TODO smooth this using averaged vert normals.
 		record.Normal = norm
 		record.CalculateIfHitIsFrontFacing(ray)
-		record.HitMaterial = *&tri.Material
+		record.HitMaterial = tri.Material
 		var u, v, w = BaryCoords(record, tri.Verts[0], tri.Verts[1], tri.Verts[2])
 		//use u v w to interpolate u v coords.
 		record.U = tri.UVs[0].X*u + tri.UVs[1].X*v + tri.UVs[2].X*w
